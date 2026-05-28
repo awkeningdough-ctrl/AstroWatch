@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroWatch - Live Space Tracking</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="dashboard-container">
+
+    <div class="top-row">
+
+      <div class="brand-telemetry-zone">
+        <header class="brand-section">
+          <h1>ASTRO<span>WATCH</span></h1>
+          <p class="tagline">LIVE SPACE. REAL TIME.</p>
+        </header>
+
+        <div class="telemetry-card">
+          <div class="card-header">
+            <h3>ISS LOCATION</h3>
+            <span class="live-dot">LIVE</span>
+          </div>
+          <div class="grid-stats" id="iss-data">
+            <div class="stat-box">Loading...</div>
+          </div>
+          <div class="card-footer">
+            <span>LAST UPDATED: <span id="timestamp">--:--:--</span> UTC</span>
+            <span class="refresh-icon">↻</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="astronaut-feed-card">
+        <div class="card-header border-bottom">
+          <div class="header-left">
+            <svg class="icon-user" viewBox="0 0 24 24" width="16" height="16">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+            </svg>
+            <h3>CREW ON ORBIT NOW</h3>
+          </div>
+          <span class="live-dot">LIVE</span>
+        </div>
+        <div class="astronauts-scroll-wrapper" id="astronauts">
+          <p class="feed-status">Loading active orbit crew configurations...</p>
+        </div>
+        <div id="astronaut-feed-footer" class="astronaut-feed-footer" style="display: none;">
+          <span id="astronaut-count-label" class="astronaut-count-label"></span>
+          <button id="show-more-btn" class="show-more-btn">SHOW MORE ↓</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="map-wrapper">
+      <div class="map-overlay-btn">✜ SATELLITE VIEW</div>
+      <div id="map"></div>
+    </div>
+
+  </div>
+
+  <div id="wiki-overlay"></div>
+  <div id="wiki-panel">
+    <div id="wiki-panel-header">
+      <span id="wiki-panel-label">PERSONNEL FILE</span>
+      <button id="wiki-panel-close">✕</button>
+    </div>
+    <div id="wiki-panel-body">
+      <div id="wiki-panel-hero">
+        <img id="wiki-panel-img" src="" alt="">
+        <div id="wiki-panel-flag-badge"></div>
+      </div>
+      <div id="wiki-panel-name"></div>
+      <div id="wiki-panel-description"></div>
+      <div id="wiki-panel-extract"></div>
+      <a id="wiki-panel-link" href="#" target="_blank" rel="noopener">
+        READ FULL ARTICLE ↗
+      </a>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
