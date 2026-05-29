@@ -1,27 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AstroWatch - Live Space Tracking</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AstroWatch - Live Space Tracking</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+<canvas id="starfield"></canvas>
+<div class="dashboard-container">
 
-  <div class="dashboard-container">
+  <nav class="main-nav">
+    <header class="brand-section">
+      <h1>ASTRO<span>WATCH</span></h1>
+      <p class="tagline">LIVE SPACE. REAL TIME.</p>
+    </header>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="iss">ISS TRACKER</button>
+      <button class="nav-tab" data-tab="neo">NEAR-EARTH OBJECTS</button>
+    </div>
+  </nav>
 
+  <div id="tab-iss" class="tab-panel active">
     <div class="top-row">
-
       <div class="brand-telemetry-zone">
-        <header class="brand-section">
-          <h1>ASTRO<span>WATCH</span></h1>
-          <p class="tagline">LIVE SPACE. REAL TIME.</p>
-        </header>
-
         <div class="telemetry-card">
           <div class="card-header">
             <h3>ISS LOCATION</h3>
@@ -55,38 +61,181 @@
           <button id="show-more-btn" class="show-more-btn">SHOW MORE ↓</button>
         </div>
       </div>
-
     </div>
 
     <div class="map-wrapper">
       <div class="map-overlay-btn">✜ SATELLITE VIEW</div>
       <div id="map"></div>
     </div>
-
   </div>
 
-  <div id="wiki-overlay"></div>
-  <div id="wiki-panel">
-    <div id="wiki-panel-header">
-      <span id="wiki-panel-label">PERSONNEL FILE</span>
-      <button id="wiki-panel-close">✕</button>
-    </div>
-    <div id="wiki-panel-body">
-      <div id="wiki-panel-hero">
-        <img id="wiki-panel-img" src="" alt="">
-        <div id="wiki-panel-flag-badge"></div>
+  <div id="tab-neo" class="tab-panel">
+    <div class="neo-header-row">
+      <div class="neo-date-controls">
+        <label class="neo-label">DATE RANGE</label>
+        <div class="neo-date-inputs">
+          <input type="date" id="neo-start" class="neo-date-input">
+          <span class="neo-date-sep">→</span>
+          <input type="date" id="neo-end" class="neo-date-input">
+          <button id="neo-fetch-btn" class="neo-fetch-btn">SCAN ⌖</button>
+        </div>
       </div>
-      <div id="wiki-panel-name"></div>
-      <div id="wiki-panel-description"></div>
-      <div id="wiki-panel-extract"></div>
-      <a id="wiki-panel-link" href="#" target="_blank" rel="noopener">
-        READ FULL ARTICLE ↗
-      </a>
+      <div class="neo-summary-chips" id="neo-summary-chips"></div>
     </div>
+
+    <div class="neo-sort-row" id="neo-sort-row" style="display:none;">
+      <span class="neo-label">SORT BY</span>
+      <div class="neo-sort-btns">
+        <button class="neo-sort-btn active" data-sort="date">DATE</button>
+        <button class="neo-sort-btn" data-sort="size">SIZE</button>
+        <button class="neo-sort-btn" data-sort="distance">CLOSEST APPROACH</button>
+        <button class="neo-sort-btn" data-sort="velocity">VELOCITY</button>
+      </div>
+      <div class="neo-filter-hazardous">
+        <label class="neo-toggle-label">
+          <input type="checkbox" id="neo-hazardous-only">
+          <span>HAZARDOUS ONLY</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="neo-status" class="neo-status-msg">Select a date range and press SCAN to load near-Earth objects.</div>
+    <div id="neo-grid" class="neo-grid"></div>
   </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
-  <script src="script.js"></script>
+</div>
+
+<div id="wiki-overlay"></div>
+<div id="wiki-panel">
+  <div id="wiki-panel-header">
+    <span id="wiki-panel-label">PERSONNEL FILE</span>
+    <button id="wiki-panel-close">✕</button>
+  </div>
+  <div id="wiki-panel-body">
+    <div id="wiki-panel-hero">
+      <img id="wiki-panel-img" src="" alt="">
+      <div id="wiki-panel-flag-badge"></div>
+    </div>
+    <div id="wiki-panel-name"></div>
+    <div id="wiki-panel-description"></div>
+    <div id="wiki-panel-extract"></div>
+    <a id="wiki-panel-link" href="#" target="_blank" rel="noopener">
+      READ FULL ARTICLE ↗
+    </a>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+<script>
+(function () {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  const mouse = { x: -9999, y: -9999 };
+  const ATTRACT_RADIUS = 180;
+  const DRIFT_SPEED = 0.4;
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  window.addEventListener('mouseleave', () => {
+    mouse.x = -9999;
+    mouse.y = -9999;
+  });
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 3000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        ox: 0,
+        oy: 0,
+        r: Math.random() * 1.2 + 0.2,
+        alpha: Math.random() * 0.7 + 0.3,
+        twinkleSpeed: Math.random() * 0.003 + 0.001,
+        phase: Math.random() * Math.PI * 2,
+        drifting: false
+      });
+    }
+    for (const s of stars) { s.ox = s.x; s.oy = s.y; }
+  }
+
+  let frame = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const grad = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+    );
+    grad.addColorStop(0, '#0b1224');
+    grad.addColorStop(1, '#030508');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    frame++;
+
+    for (const s of stars) {
+      const dx = mouse.x - s.x;
+      const dy = mouse.y - s.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < ATTRACT_RADIUS) {
+        s.drifting = true;
+        const pull = (1 - dist / ATTRACT_RADIUS) * DRIFT_SPEED;
+        s.x += dx * pull * 0.05;
+        s.y += dy * pull * 0.05;
+
+        const progress = 1 - dist / ATTRACT_RADIUS;
+        const lineAlpha = progress * 0.35;
+
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(mouse.x, mouse.y);
+        ctx.strokeStyle = `rgba(150, 190, 255, ${lineAlpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      } else {
+        if (s.drifting) {
+          s.x += (s.ox - s.x) * 0.04;
+          s.y += (s.oy - s.y) * 0.04;
+          if (Math.abs(s.x - s.ox) < 0.3 && Math.abs(s.y - s.oy) < 0.3) {
+            s.x = s.ox;
+            s.y = s.oy;
+            s.drifting = false;
+          }
+        }
+      }
+
+      const twinkle = s.alpha * (0.6 + 0.4 * Math.sin(frame * s.twinkleSpeed + s.phase));
+      const boost = s.drifting ? 1.4 : 1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r * boost, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${Math.min(1, twinkle * boost)})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  initStars();
+  draw();
+
+  window.addEventListener('resize', () => { resize(); initStars(); });
+})();
+</script>
+<script src="script.js"></script>
 </body>
 </html>
