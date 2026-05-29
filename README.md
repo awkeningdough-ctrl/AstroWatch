@@ -82,4 +82,4 @@ Many systems are experimental, incomplete, placeholder implementations, or early
 
 # License
 
-No license has currently been specified for this project.
+MIT
